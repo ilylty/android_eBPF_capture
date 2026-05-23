@@ -38,10 +38,13 @@ int trace_ssl_write(struct user_pt_regs *ctx)
 
     event.pid = pid_tgid >> 32;
     event.tid = (__u32)pid_tgid;
-    event.len = len > MAX_DATA_SIZE ? MAX_DATA_SIZE : len;
+    if (len > MAX_DATA_SIZE) {
+        len = MAX_DATA_SIZE;
+    }
+    event.len = (__u32)len;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
 
-    bpf_probe_read_user(event.data, event.len, buf);
+    bpf_probe_read_user(event.data, MAX_DATA_SIZE, buf);
 
     bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &event, sizeof(event));
     return 0;

@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	bpfObjectPath = "ssl.bpf.o"
+	bpfObjectPath = "/data/local/tmp/ssl.bpf.o"
 	libPath       = "/apex/com.android.conscrypt/lib64/libssl.so"
 	symbolName    = "SSL_write"
 	maxDataSize   = 256

@@ -81,7 +81,12 @@ func loadObjects(path string, objs interface{}) error {
 	if err != nil {
 		return err
 	}
-	return spec.LoadAndAssign(objs, nil)
+	return spec.LoadAndAssign(objs, &ebpf.CollectionOptions{
+		Programs: ebpf.ProgramOptions{
+			LogLevel: ebpf.LogLevelInstruction,
+			LogSize:  1024 * 1024,
+		},
+	})
 }
 
 func attachSSLWrite(path, symbol string, prog *ebpf.Program) (link.Link, error) {

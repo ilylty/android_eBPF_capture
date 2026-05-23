@@ -1,0 +1,46 @@
+name: Build Android eBPF Capture
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install LLVM/Clang and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang llvm libbpf-dev libelf-dev build-essential linux-libc-dev
+
+      - name: Compile eBPF bytecode
+        run: |
+          clang -target bpf \
+            -D__TARGET_ARCH_arm64 \
+            -I/usr/include \
+            -I/usr/include/$(uname -m)-linux-gnu \
+            -O2 -g -c ssl.bpf.c -o ssl.bpf.o
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Build Go loader for Android
+        run: |
+          go mod tidy
+          env CGO_ENABLED=0 GOOS=android GOARCH=arm64 go build -ldflags="-s -w" -o ssl_sniff_bin main.go
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-ebpf-capture-binaries
+          path: |
+            ssl.bpf.o
+            ssl_sniff_bin
